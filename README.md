@@ -16,3 +16,5 @@ everything i build on youtube, i will post here. currently available:
 7. breakout wick trading algo
 8. first hour vs last hour algo
 9. first hour breakout algo
+10. funding rate arbitrage 
+11. buy the dip bot

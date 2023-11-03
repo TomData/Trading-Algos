@@ -25,6 +25,9 @@ data = pd.read_csv('breakout_wick_algo/ETH-USD-15m-2018-1-02T00:00.csv', parse_d
 # Convert the 'time' column to datetime index
 data.set_index('time', inplace=True)
 
+data.columns = [column.capitalize() for column in data.columns]
+
+
 # Create an instance of the backtest with the strategy
 bt = Backtest(data, WickBreakoutStrategy, cash=100000, commission=0.002)
 
