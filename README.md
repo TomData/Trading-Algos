@@ -19,3 +19,4 @@ everything i build on youtube, i will post here. currently available:
 10. funding rate arbitrage 
 11. buy the dip bot
 12. demand zone volume spike
+13. futures open algo

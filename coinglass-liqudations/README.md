@@ -11,3 +11,8 @@ https://www.luxeeai.com//connecting-to-coinglass-api-retrieving-liquidation-data
 
 https://www.luxeeai.com//connect-coinglass-api-retrieve-liquidation-data-python 
 
+ideas
+- with liq data, if my bot wants to long, it should wait until Liquidations of buyers because then it should be a better price. 
+
+notes-
+- to get more refined data 1min-30min its 379/mo, think about how to build this and give to community for free
