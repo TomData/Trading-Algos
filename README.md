@@ -20,3 +20,4 @@ everything i build on youtube, i will post here. currently available:
 11. buy the dip bot
 12. demand zone volume spike
 13. futures open algo
+14. low cap gem algo 
