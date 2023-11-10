@@ -33,7 +33,23 @@ def bot():
 
         df = pd.concat([df, temp_df])
 
+    # Reverse the dataframe to have the newest data on top
+    df = df.iloc[::-1]
+
     df.to_csv('lowcapgem_algo/coingecko.csv', index=False)
+
+def get_most_common_coins(hours):
+    window_start = datetime.datetime.now() - datetime.timedelta(hours=hours)
+    window_end = datetime.datetime.now()
+
+    window_df = df[(df['date'] >= window_start.strftime("%m-%d-%y %I:%M %p")) & (df['date'] <= window_end.strftime("%m-%d-%y %I:%M %p"))]
+
+    if window_df.empty:
+        return None
+
+    most_common_coins = window_df['coin'].value_counts().head(3)
+
+    return most_common_coins
 
 def run_schedule():
     while True:
@@ -80,17 +96,92 @@ def home():
     </style>
     '''
 
+    most_common_coins_24 = get_most_common_coins(24)
+    most_common_coins_48 = get_most_common_coins(48)
+    most_common_coins_72 = get_most_common_coins(72)
+
+    most_common_table_24 = '''
+    <h2>Most Trending Coins in the Last 24 Hours:</h2>
+    <table>
+      <tr>
+        
+        <th>Coin</th>
+        <th>Count</th>
+        <th>Rank</th>
+        
+      </tr>
+    '''
+
+    if most_common_coins_24 is not None:
+        for coin, count in most_common_coins_24.items():
+            rank = df[df['coin'] == coin]['rank'].values[0]
+            most_common_table_24 += f'''
+              <tr>
+                
+                <td>{coin}</td>
+                <td>{count}</td>
+                <td>{rank}</td>
+                
+              </tr>
+            '''
+    else:
+        most_common_table_24 += '''
+            <tr>
+                <td colspan="3">No data available</td>
+            </tr>
+        '''
+
+    most_common_table_24 += '''
+        </table>
+    '''
+
+    most_common_table_72 = '''
+    <h2>Most Trending Coins in the Last 72 Hours:</h2>
+    <table>
+      <tr>
+        
+        <th>Coin</th>
+        <th>Count</th>
+        <th>Rank</th>
+        
+      </tr>
+    '''
+
+    if most_common_coins_72 is not None:
+        for coin, count in most_common_coins_72.items():
+            rank = df[df['coin'] == coin]['rank'].values[0]
+            most_common_table_72 += f'''
+              <tr>
+                
+                <td>{coin}</td>
+                <td>{count}</td>
+                <td>{rank}</td>
+                
+              </tr>
+            '''
+    else:
+        most_common_table_72 += '''
+            <tr>
+                <td colspan="3">No data available</td>
+            </tr>
+        '''
+
+    most_common_table_72 += '''
+        </table>
+    '''
+
     return table_style + '''
     <h1>Trending Altcoins</h1>
-    <h2>These are all the trending coins on Coingecko, refreshed every 15 minutes and stored so you dont miss any</h2>
+    <h2>These are all the trending coins on Coingecko, refreshed every 15 minutes and stored so you don't miss any</h2>
+    ''' + most_common_table_24 + '''<br>''' + most_common_table_72 + '''
+    <h2>Trending Coins Data:</h2>
     <table>''' + df.to_html(classes='data', header=True, index=False).replace('<td>', '<td class="date-time-col">') + '</table>'
 
-if __name__ == '__main__':
-    bot()
-    # Run the bot first time before the schedule
-    schedule.every(900).seconds.do(bot)
-    # Start the schedule on a background thread
-    t = threading.Thread(target=run_schedule)
-    t.start()
-    # run the flask app
-    app.run(port=5000)
+bot()
+# Run the bot first time before the schedule
+schedule.every(900).seconds.do(bot)
+# Start the schedule on a background thread
+t = threading.Thread(target=run_schedule)
+t.start()
+# run the flask app
+app.run(port=5000)
