@@ -1,7 +1,6 @@
 # Low  cap gem finder
 
-overview
-- we are going to search coingecko for undervalued altcoins with our bot
+This bot watches the coin gecko trending search throughout the day and then posts them to a website so we dont miss any trending coins. it also sends them to this discord channel: https://discord.gg/yn7U4T2hbW
 
 - using the trending
 
