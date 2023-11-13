@@ -21,3 +21,8 @@ everything i build on youtube, i will post here. currently available:
 12. demand zone volume spike
 13. futures open algo
 14. low cap gem algo 
+
+RBI System is the system we use in order to find new working trading algos
+
+1. Research - trading strategies (papers on google scholar, youtube, google, books)
+2. Backtest - backtest these strategies multiple times, find best variation but dont overfit 
