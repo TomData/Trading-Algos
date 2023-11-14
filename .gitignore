@@ -3,3 +3,4 @@ coinglass-liqudations/dontshareconfig.py
 lowcapgem_algo/donstshareconfig.py
 mexc_bots/dontshareconfig.py
 hyperliquid/dontshareconfig.py
+hyperliquid/__pycache__
