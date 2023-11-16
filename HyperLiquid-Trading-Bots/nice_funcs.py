@@ -42,7 +42,7 @@ import datetime
 import schedule 
 import requests 
 
-symbol = 'KAS' 
+symbol = 'SOL' 
 timeframe = '15m'
 limit = 1000 
 max_loss = -1
@@ -80,8 +80,9 @@ def ask_bid(symbol):
 def limit_order(coin: str, is_buy: bool, sz: float, limit_px: float, reduce_only: bool = False):
     account: LocalAccount = eth_account.Account.from_key(key)
     exchange = Exchange(account, constants.MAINNET_API_URL)
-    sz = round(sz,1)
-    limit_px = round(limit_px,rounding)
+    rounding = get_sz_px_decimals(coin)[0]
+    sz = round(sz,rounding)
+    # limit_px = round(limit_px,rounding)
     print(f'placing limit order for {coin} {sz} @ {limit_px}')
     order_result = exchange.order(coin, is_buy, sz, limit_px, {"limit": {"tif": "Gtc"}}, reduce_only=reduce_only)
 
@@ -96,7 +97,7 @@ def get_sz_px_decimals(symbol):
 
     '''
     this is succesfully returns Size decimals and Price decimals
-    
+
     this outputs the size decimals for a given symbol
     which is - the SIZE you can buy or sell at
     ex. if sz decimal == 1 then you can buy/sell 1.4
@@ -115,7 +116,7 @@ def get_sz_px_decimals(symbol):
     if response.status_code == 200:
         # Success
         data = response.json()
-        print(data)
+        #print(data)
         symbols = data['universe']
         symbol_info = next((s for s in symbols if s['name'] == symbol), None)
         if symbol_info:
@@ -128,7 +129,7 @@ def get_sz_px_decimals(symbol):
         print('Error:', response.status_code)
 
     ask = ask_bid(symbol)[0]
-    print(f'this is the ask {ask}')
+    #print(f'this is the ask {ask}')
 
     # Compute the number of decimal points in the ask price
     ask_str = str(ask)
@@ -137,12 +138,12 @@ def get_sz_px_decimals(symbol):
     else:
         px_decimals = 0
 
-    print(f'this is the price {px_decimals} decimal(s)')
+    print(f'{symbol} this is the price {sz_decimals} decimal(s)')
 
     return sz_decimals, px_decimals
 
 
-def adjust_leverage(symbol):
+def adjust_leverage(symbol, leverage):
     account = LocalAccount = eth_account.Account.from_key(key)
     exchange = Exchange(account, constants.MAINNET_API_URL)
     info = Info(constants.MAINNET_API_URL, skip_ws=True)
@@ -166,6 +167,9 @@ def get_ohclv(cb_symbol, timeframe, limit):
     df['support'] = df[:-2]['close'].min()
     df['resis'] = df[:-2]['close'].max()
 
+    # Save the dataframe to a CSV file
+    df.to_csv('ohlcv_data.csv', index=False)
+
     return df 
 
 
@@ -176,7 +180,7 @@ def supply_demand_zones(symbol, timeframe, limit):
     sd_df = pd.DataFrame()
 
     df = get_ohclv(cb_symbol, timeframe, limit)
-    print(df)
+    #print(df)
 
     supp = df.iloc[-1]['support']
     resis = df.iloc[-1]['resis']
@@ -197,7 +201,7 @@ def supply_demand_zones(symbol, timeframe, limit):
     return sd_df 
 
 
-def get_position():
+def get_position(symbol):
 
     '''
     gets the current position info, like size etc. 
@@ -242,11 +246,11 @@ def cancel_all_orders():
     info = Info(constants.MAINNET_API_URL, skip_ws=True)
 
     open_orders = info.open_orders(account.address)
-    print(open_orders)
+    #print(open_orders)
 
     print('above are the open orders... need to cancel any...')
     for open_order in open_orders:
-        print(f'cancelling order {open_order}')
+        #print(f'cancelling order {open_order}')
         exchange.cancel(open_order['coin'], open_order['oid'])
 
 def volume_spike(df):
@@ -255,8 +259,8 @@ def volume_spike(df):
 
     # A downward trend can be seen when the current close price is below the moving average of close price
     df['MA_Close'] = df['close'].rolling(window=20).mean()
-    print(df['MA_Volume'])
-    print(df['MA_Close'])
+    # print(df['MA_Volume'])
+    # print(df['MA_Close'])
 
     latest_data = df.iloc[-1]
     volume_spike_and_price_downtrend = latest_data['volume'] > vol_multiplier * latest_data['MA_Volume'] and latest_data['MA_Close'] > latest_data['close']
@@ -265,7 +269,7 @@ def volume_spike(df):
 
 def kill_switch(symbol):
 
-    positions, im_in_pos, pos_size, pos_sym, entry_px, pnl_perc, long = get_position()
+    positions, im_in_pos, pos_size, pos_sym, entry_px, pnl_perc, long = get_position(symbol)
 
     while im_in_pos == True:
 
@@ -281,20 +285,20 @@ def kill_switch(symbol):
         if long == True:
             limit_order(pos_sym, False, pos_size, ask)
             print('kill switch - SELL TO CLOSE SUBMITTED ')
-            time.sleep(7)
+            time.sleep(5)
         elif long == False:
             limit_order(pos_sym, True, pos_size, bid)
             print('kill switch - BUY TO CLOSE SUBMITTED ')
-            time.sleep(7)
+            time.sleep(5)
         
-        positions, im_in_pos, pos_size, pos_sym, entry_px, pnl_perc, long = get_position()
+        positions, im_in_pos, pos_size, pos_sym, entry_px, pnl_perc, long = get_position(symbol)
 
     print('position successfully closed in kill switch')
 
-def pnl_close():
+def pnl_close(symbol):
 
     print('entering pnl close')
-    positions, im_in_pos, pos_size, pos_sym, entry_px, pnl_perc, long = get_position()
+    positions, im_in_pos, pos_size, pos_sym, entry_px, pnl_perc, long = get_position(symbol)
 
     if pnl_perc > target:
         print(f'pnl gain is {pnl_perc} and target is {target}... closing position WIN')
@@ -306,23 +310,23 @@ def pnl_close():
         print(f'pnl loss is {pnl_perc} and max loss is {max_loss} and target {target}... not closing position')
     print('finished with pnl close')
 
-pnl_close()
+# pnl_close()
 
-# df = get_ohclv(cb_symbol, timeframe, limit)
-# print(volume_spike(df))
-# time.sleep(876)
+# # df = get_ohclv(cb_symbol, timeframe, limit)
+# # print(volume_spike(df))
+# # time.sleep(876)
 
-#kill_switch(symbol)
+# #kill_switch(symbol)
 
-cancel_all_orders()
-askbid = ask_bid(symbol)
-bid = askbid[1]
-ask = askbid[0]
-l2_data = askbid[2]
-#print(l2_data)
+# cancel_all_orders()
+# askbid = ask_bid(symbol)
+# bid = askbid[1]
+# ask = askbid[0]
+# l2_data = askbid[2]
+# #print(l2_data)
 
-#limit_order(symbol, True, pos_size, bid) # buy order
-#limit_order(symbol, False, pos_size, ask) # sell order
+# #limit_order(symbol, True, pos_size, bid) # buy order
+# #limit_order(symbol, False, pos_size, ask) # sell order
 
-time.sleep(7)
+# time.sleep(7)
 
