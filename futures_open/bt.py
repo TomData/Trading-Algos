@@ -40,3 +40,4 @@ class SundayEveningStrategy(Strategy):
 bt = Backtest(df, SundayEveningStrategy, cash=1000000, commission=.002)
 output = bt.run()
 print(output)
+
